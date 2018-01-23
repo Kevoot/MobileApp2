@@ -1,0 +1,21 @@
+Mobile App 2 Planning Document
+
+Milestones:
+	- Idea decided on
+	- Proposal created (based on DifferenceMaker idea plan)
+	- Overall app Architecture visualized + Delineate sections or ideas to team members
+	- Create project, stub out all expected functionality, basic exception handling/tests upload to Github
+	- Alpha status (basic functionality) + more robust exception handling/testing
+	- Beta status (Solid functionality, still needs cleanup + UI work) + finalize testing plan (exception handling should be done by now.)
+	- Final Release
+	
+Grading:
+	- Project Proposal: 10%
+	- Weekly Progress: 15%
+	- Alpha/Beta/Final Code Review: 45%
+	- Alpha/Beta/Final individual report: 15%
+	- Final Group report and presentation: 15%
+	
+	
+
+	
