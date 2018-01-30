@@ -3,11 +3,16 @@ package appdev2.gameofdeath;
 /**
  * Created by Kevin on 1/25/2018.
  */
+/* TODO: This crashes out if you hit the back button. When this activity
+ * is destroyed, the Runnable needs to be destroyed
+ */
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
 import android.util.AttributeSet;
@@ -27,17 +32,11 @@ public class CellGridSurface extends SurfaceView {
     // Indicates if the initial Grid has it's cellGrid initialized;
     public static boolean mInitialized = false;
 
-    // Cell radius (half an adjustment)
-    public int mCellRadius;
-
     // View size (in # of pixels)
     public int mViewSizeX, mViewSizeY;
 
-    // Grid size (in # of cells)
-    public int mGridSizeX, mGridSizeY;
-
     // Adjustment ratio from view size to grid size (for touch handling)
-    public int xAdjust, yAdjust;
+    // public int xAdjust, yAdjust;
 
     // Number of ticks per turn
     public int mTickRate = 1;
@@ -48,26 +47,32 @@ public class CellGridSurface extends SurfaceView {
     // Pasting Grid
     public Cell[][] mPasteGrid;
 
+    // Cells per grid in X and Y directions, as well as sizes in pixels
+    private int xCellsCount, yCellsCount, cellWidth, cellHeight;
+
     // Delay in milliseconds between each simulation step
     public int mDelay;
+
+    // horizontal and vertical grid-based line locations
+    public int[] horizontalLineLocations;
+    public int[] verticalLineLocations;
 
     // Handler for running simulation loop
     public final Handler mHandler = new Handler();
 
-    // Runnable to attach to handler
-    // Unsure if we'll need this, except for ticks possibly
-    // At bare minimum will need to be modified to watch for end of turn, and then only
-    // proceed through a set number of ticks
-    /* final Runnable mRunnable = new Runnable() {
+    // TODO: Modify this so it only runs through the specified number of ticks before it
+    // stops looping.
+    final Runnable mRunnable = new Runnable() {
         public void run() {
             mHandler.removeCallbacks(this);
-            step();
             DrawGrid();
             mHandler.postDelayed(this, mDelay);
         }
-    };*/
+    };
 
+    // Will be used for custom backdrops
     private Bitmap mCurrentBg;
+    // Will be used for pasting a preview
     private Bitmap mPreviewBitmap;
 
     private SurfaceHolder holder;
@@ -82,8 +87,9 @@ public class CellGridSurface extends SurfaceView {
         // Initially set to 1 second between each step
         mDelay = 1000;
 
-        // TODO: Figure out this based on initial grid size;
-        mCellRadius = 0;
+        // For adjusting size of grid
+        xCellsCount = 20;
+        yCellsCount = 36;
 
         // Responsible for starting drawing thread
         holder.addCallback(new SurfaceHolder.Callback() {
@@ -98,14 +104,11 @@ public class CellGridSurface extends SurfaceView {
                     } catch (InterruptedException e) { }
                 }
             }
-
+            // Drawing must be handled in a separate thread or it locks the UI
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 cellThread.setRunning(true);
                 cellThread.start();
-                // Canvas c = holder.lockCanvas(null);
-                // onDraw(c);
-                // holder.unlockCanvasAndPost(c);
             }
 
             @Override
@@ -115,7 +118,7 @@ public class CellGridSurface extends SurfaceView {
 
         });
 
-        //Added Kevin & James - Pasting to grid
+        // TODO: This needs reworking, should be easier now that the cells width/heigh are defined
         mPasteHandler = new OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -143,7 +146,6 @@ public class CellGridSurface extends SurfaceView {
                         // x and y = top left coordinate of surface
                         // Will have to create a bitmap and draw to it as above during each event
                         // as they are handled
-                        //c.drawBitmap(tempBg, x, y, mAliveCellPaint);
                         draw(c);
                     }
                 }
@@ -157,7 +159,8 @@ public class CellGridSurface extends SurfaceView {
         };
     }
 
-    //Added Kevin - Transfer the pasting grid onto active grid
+    // For transferring cells from a paste fragment.
+    // TODO: This will need to be reworked.
     public void PasteCellsToGrid(Cell[][] cells, int xOffset, int yOffset) {
         for(int i = 0; i < cells.length; i++) {
             for(int j = 0; j < cells[0].length; j++) {
@@ -170,7 +173,7 @@ public class CellGridSurface extends SurfaceView {
         }
     }
 
-    //Added Kevin - initialize the grid with random cells
+    // Initialize grid size and start the runnable/thread for drawing
     public void initGrid() {
         mViewSizeY = this.getHeight();
         mViewSizeX = this.getWidth();
@@ -180,44 +183,64 @@ public class CellGridSurface extends SurfaceView {
             return;
         }
 
-        // Actual adjusted grid dimensions
-        mGridSizeX = mViewSizeX / xAdjust;
-        mGridSizeY = mViewSizeY / yAdjust;
+        cellHeight = mViewSizeY / yCellsCount;
+        cellWidth = mViewSizeX / xCellsCount;
 
         // Create a grid of cells and a grid of colors for those cells
-        mCellGrid = new Cell[mGridSizeX][mGridSizeY];
+        // mCellGrid = new Cell[mGridSizeX][mGridSizeY];
+        mCellGrid = new Cell[xCellsCount][yCellsCount];
 
-        // Uncomment once mHandler is running at ticks per turn, and can watch for
-        // user turn completion
-        // completing end of turn
-        // mHandler.postDelayed(mRunnable, 1000);
-        this.mInitialized = true;
+        // initialize all to dead at first via default constructor
+        for(int i = 0; i < mCellGrid.length; i++) {
+            for(int j = 0; j < mCellGrid[i].length; j++) {
+                mCellGrid[i][j] = new Cell();
+            }
+        }
+
+        mHandler.postDelayed(mRunnable, 1000);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if(!this.mInitialized) {
+        if(!mInitialized) {
             initGrid();
-            this.mInitialized = true;
+            mInitialized = true;
         }
 
-        // TODO: Modify this to redraw background before drawing cells
-        // Paint paint = new Paint();
-        // mCurrentBg = Bitmap.createBitmap(mViewSizeX, mViewSizeY, Bitmap.Config.ARGB_8888);
-        // paint.setAntiAlias(true);
-        // paint.setColor(Color.GREEN);
-        // canvas.drawRect(0, 0, mViewSizeX, mViewSizeY, mDeadCellPaint);
+        // Used for testing cells on the canvas - will be deleted once things
+        // are further along
+        mCellGrid[0][0].type = CellType.PLAYER;
+        mCellGrid[xCellsCount - 1][yCellsCount - 1].type = CellType.PLAYER;
+        mCellGrid[xCellsCount - 1][yCellsCount - 3].type = CellType.PLAYER;
+        mCellGrid[xCellsCount - 2][yCellsCount - 2].type = CellType.ENEMY;
 
         // Paint each cell according to their internal color
-        for(int i = 0; i < mGridSizeX; i++) {
-            for(int j = 0; j < mGridSizeY; j++) {
-                canvas.drawCircle(i * xAdjust, j * yAdjust, mCellRadius, mCellGrid[i][j].getTypeColor());
+        for(int i = 0; i < xCellsCount; i++) {
+            for(int j = 0; j < yCellsCount; j++) {
+                canvas.drawRect(i*cellWidth, j*cellHeight, (i*cellWidth) + cellWidth,
+                        (j*cellHeight) + cellHeight, mCellGrid[i][j].getTypeColor());
             }
         }
     }
 
+    // This constantly resets enemy, player, dead, or blocked cells so they can be repainted
+    // and their old status doesn't show instead. Could probably use a renaming
+    public void DrawGrid() {
+        mCurrentBg = Bitmap.createBitmap(mViewSizeX, mViewSizeY, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(mCurrentBg);
+
+        Paint deadPaint = new Paint();
+        deadPaint.setAntiAlias(true);
+        deadPaint.setColor(Color.TRANSPARENT);
+        // Draw background
+        canvas.drawRect(0, 0, mViewSizeX, mViewSizeY, deadPaint);
+
+        setBackground(null);
+        setBackgroundDrawable(new BitmapDrawable(mCurrentBg));
+    }
+
     // Steps of the simulation
-    // Will have to modify this to allow for separate iteration of types
+    // TODO: Will need to modify this to only change similar colors nearby (check cell type)
     /*public void step() {
         boolean[][] future = new boolean[mGridSizeX][mGridSizeY];
 
@@ -260,13 +283,12 @@ public class CellGridSurface extends SurfaceView {
         mCellGrid = future;
     }*/
 
-    // TODO: Uncomment these once mRunnable is set up for turn based game
-    /* public void pause() {
+    public void pause() {
         mHandler.removeCallbacks(mRunnable);
-    } */
-    /* public void resume() {
+    }
+    public void resume() {
         mHandler.postDelayed(mRunnable, mDelay);
-    }*/
+    }
 
     // Needed so android studio wont yell at me for doing the touch listener
     @Override
@@ -276,6 +298,7 @@ public class CellGridSurface extends SurfaceView {
     }
 
     // Allows for drawing transparent pasting grid over the current Surface
+    // TODO: this is still the same implementation as the old one, and will need reworking
     private Bitmap overlay(Bitmap bmp1, Bitmap bmp2, int x, int y) {
         Bitmap bmOverlay = Bitmap.createBitmap(bmp1.getWidth(), bmp1.getHeight(), bmp1.getConfig());
         Canvas canvas = new Canvas(bmOverlay);

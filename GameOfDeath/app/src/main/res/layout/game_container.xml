@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="8dp"
+        tools:layout_editor_absoluteY="8dp">
+    <appdev2.gameofdeath.CellGridSurface
+        android:id="@+id/cellGridView"
+        android:layout_width="match_parent"
+        android:layout_height="495dp"
+        android:layout_weight="1"
+        tools:layout_editor_absoluteX="8dp"
+        tools:layout_editor_absoluteY="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:background="@android:color/background_dark"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:weightSum="1">
+
+            <Button
+                android:id="@+id/saveButton"
+                android:layout_width="45dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.10"
+                android:padding="4dp"
+                android:scaleType="fitCenter"
+                android:text="Finish Turn" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>
