@@ -62,7 +62,7 @@ public class CellGridSurface extends SurfaceView {
 
     // TODO: Modify this so it only runs through the specified number of ticks before it
     // stops looping.
-    final Runnable mRunnable = new Runnable() {
+    Runnable mRunnable = new Runnable() {
         public void run() {
             mHandler.removeCallbacks(this);
             DrawGrid();
@@ -284,6 +284,10 @@ public class CellGridSurface extends SurfaceView {
     }*/
 
     public void pause() {
+        cellThread.setRunning(false);
+        while (cellThread.isAlive()) {
+            // Wait
+        }
         mHandler.removeCallbacks(mRunnable);
     }
     public void resume() {

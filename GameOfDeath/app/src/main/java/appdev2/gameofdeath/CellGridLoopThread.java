@@ -23,6 +23,7 @@ public class CellGridLoopThread extends Thread {
         running = run;
     }
 
+
     @Override
     public void run() {
         while (running) {
