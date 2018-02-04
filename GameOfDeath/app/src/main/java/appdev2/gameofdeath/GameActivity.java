@@ -3,9 +3,11 @@ package appdev2.gameofdeath;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 
+import static android.os.Debug.waitForDebugger;
 import static appdev2.gameofdeath.CellGridSurface.mInitialized;
 
 /**
@@ -27,6 +29,19 @@ public class GameActivity extends AppCompatActivity {
         }
 
         surface = findViewById(R.id.cellGridView);
+
+        Button finishTurnButton = findViewById(R.id.game_container_finish_turn);
+        finishTurnButton.setOnClickListener(new SurfaceView.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                waitForDebugger();
+                // TODO: This is for testing, will need to receive ENEMY or PLAYER for each round.
+                surface.pause();
+                surface.completeTurn(CellType.PLAYER);
+                surface.resume();
+            }
+        });
     }
 
     @Override

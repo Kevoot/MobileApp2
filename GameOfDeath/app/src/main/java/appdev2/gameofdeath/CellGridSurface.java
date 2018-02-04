@@ -20,6 +20,13 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Button;
+
+import java.util.Random;
+
+import static android.os.Debug.waitForDebugger;
+import static appdev2.gameofdeath.Cell.getTypeColorFromType;
+import static appdev2.gameofdeath.CellType.DEAD;
 
 public class CellGridSurface extends SurfaceView {
     // Value for any void space (should use background setting instead of painting
@@ -42,7 +49,7 @@ public class CellGridSurface extends SurfaceView {
     public int mTickRate = 1;
 
     // Actual grid containing 0 or 1's indicating dead or alive cell
-    public Cell [][] mCellGrid;
+    public static Cell [][] mCellGrid;
 
     // Pasting Grid
     public Cell[][] mPasteGrid;
@@ -173,6 +180,10 @@ public class CellGridSurface extends SurfaceView {
         }
     }
 
+    public void completeTurn(CellType type) {
+        step(CellType.PLAYER);
+    }
+
     // Initialize grid size and start the runnable/thread for drawing
     public void initGrid() {
         mViewSizeY = this.getHeight();
@@ -197,6 +208,23 @@ public class CellGridSurface extends SurfaceView {
             }
         }
 
+        // Used for testing cells on the canvas - will be deleted once things
+        // are further along
+        mCellGrid[0][0].type = CellType.PLAYER;
+        mCellGrid[xCellsCount - 1][yCellsCount - 1].type = CellType.PLAYER;
+        mCellGrid[xCellsCount - 1][yCellsCount - 3].type = CellType.PLAYER;
+        mCellGrid[xCellsCount - 2][yCellsCount - 2].type = CellType.ENEMY;
+
+        // Stable Structure (unchanging)
+        mCellGrid[xCellsCount - 5][yCellsCount - 5].type = CellType.PLAYER;
+        mCellGrid[xCellsCount - 4][yCellsCount - 6].type = CellType.PLAYER;
+        mCellGrid[xCellsCount - 5][yCellsCount - 7].type = CellType.PLAYER;
+        mCellGrid[xCellsCount - 6][yCellsCount - 6].type = CellType.PLAYER;
+
+        mCellGrid[5][5].type = CellType.PLAYER;
+        mCellGrid[4][6].type = CellType.PLAYER;
+        mCellGrid[6][6].type = CellType.PLAYER;
+
         mHandler.postDelayed(mRunnable, 1000);
     }
 
@@ -207,16 +235,13 @@ public class CellGridSurface extends SurfaceView {
             mInitialized = true;
         }
 
-        // Used for testing cells on the canvas - will be deleted once things
-        // are further along
-        mCellGrid[0][0].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 1][yCellsCount - 1].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 1][yCellsCount - 3].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 2][yCellsCount - 2].type = CellType.ENEMY;
-
         // Paint each cell according to their internal color
         for(int i = 0; i < xCellsCount; i++) {
             for(int j = 0; j < yCellsCount; j++) {
+                if(mCellGrid[i][j] == null) {
+                    canvas.drawRect(i*cellWidth, j*cellHeight, (i*cellWidth) + cellWidth,
+                            (j*cellHeight) + cellHeight, getTypeColorFromType(DEAD));
+                }
                 canvas.drawRect(i*cellWidth, j*cellHeight, (i*cellWidth) + cellWidth,
                         (j*cellHeight) + cellHeight, mCellGrid[i][j].getTypeColor());
             }
@@ -231,7 +256,7 @@ public class CellGridSurface extends SurfaceView {
 
         Paint deadPaint = new Paint();
         deadPaint.setAntiAlias(true);
-        deadPaint.setColor(Color.TRANSPARENT);
+        deadPaint.setColor(Color.BLACK);
         // Draw background
         canvas.drawRect(0, 0, mViewSizeX, mViewSizeY, deadPaint);
 
@@ -241,37 +266,48 @@ public class CellGridSurface extends SurfaceView {
 
     // Steps of the simulation
     // TODO: Will need to modify this to only change similar colors nearby (check cell type)
-    /*public void step() {
-        boolean[][] future = new boolean[mGridSizeX][mGridSizeY];
+    public void step(CellType type) {
+        Cell[][] future = new Cell[xCellsCount][yCellsCount];
+        // Have to initialize each
 
-        // Loop through every cell
-        for (int l = 1; l < mGridSizeX - 1; l++)
+        // Loop through every cell and initialize all to dead
+        for(int i = 0; i < future.length; i++) {
+            for(int j = 0; j < future[i].length; j++) {
+                future[i][j] = new Cell();
+            }
+        }
+
+
+        for (int l = 1; l < xCellsCount - 1; l++)
         {
-            for (int m = 1; m < mGridSizeY - 1; m++)
+            for (int m = 1; m < yCellsCount - 1; m++)
             {
                 // finding no Of Neighbours that are alive
                 int aliveNeighbours = 0;
                 for (int i = -1; i <= 1; i++)
                     for (int j = -1; j <= 1; j++)
-                        aliveNeighbours += mCellGrid[l + i][m + j] ? 1 : 0;
-
+                        if(mCellGrid[l + i][m + j].type == type) {
+                            aliveNeighbours += 1;
+                        }
                 // The cell needs to be subtracted from
                 // its neighbours as it was counted before
-                aliveNeighbours -= mCellGrid[l][m] ? 1 : 0;
+                if(mCellGrid[l][m].type == type) {
+                    aliveNeighbours -= 1;
+                }
 
                 // Implementing the Rules of Life
 
                 // Cell is lonely and dies
-                if ((mCellGrid[l][m] == true) && (aliveNeighbours < 2))
-                    future[l][m] = false;
+                if ((mCellGrid[l][m].type == type) && (aliveNeighbours < 2))
+                    future[l][m].type = DEAD;
 
                     // Cell dies due to over population
-                else if ((mCellGrid[l][m] == true) && (aliveNeighbours > 3))
-                    future[l][m] = false;
+                else if ((mCellGrid[l][m].type == type) && (aliveNeighbours > 3))
+                    future[l][m].type = DEAD;
 
                     // A new cell is born
-                else if ((mCellGrid[l][m] == false) && (aliveNeighbours == 3))
-                    future[l][m] = true;
+                else if ((mCellGrid[l][m].type == DEAD) && (aliveNeighbours == 3))
+                    future[l][m].type = type;
 
                     // Remains the same
                 else
@@ -279,11 +315,11 @@ public class CellGridSurface extends SurfaceView {
             }
         }
 
-        mPrevCellGrid = mCellGrid;
         mCellGrid = future;
-    }*/
+    }
 
     public void pause() {
+        waitForDebugger();
         cellThread.setRunning(false);
         while (cellThread.isAlive()) {
             // Wait
@@ -291,6 +327,7 @@ public class CellGridSurface extends SurfaceView {
         mHandler.removeCallbacks(mRunnable);
     }
     public void resume() {
+        waitForDebugger();
         mHandler.postDelayed(mRunnable, mDelay);
     }
 
