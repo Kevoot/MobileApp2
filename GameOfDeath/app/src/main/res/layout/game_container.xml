@@ -26,7 +26,7 @@
             android:weightSum="1">
 
             <Button
-                android:id="@+id/saveButton"
+                android:id="@+id/game_container_finish_turn"
                 android:layout_width="45dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0.10"
