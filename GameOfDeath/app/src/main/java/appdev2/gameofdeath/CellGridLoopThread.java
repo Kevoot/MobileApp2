@@ -1,15 +1,6 @@
 package appdev2.gameofdeath;
 
-/**
- * Created by Kevin on 1/25/2018.
- */
-
-
 import android.graphics.Canvas;
-
-/**
- * Created by Kevin on 12/14/2017.
- */
 
 public class CellGridLoopThread extends Thread {
     private CellGridSurface view;

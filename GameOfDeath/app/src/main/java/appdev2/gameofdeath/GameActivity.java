@@ -10,10 +10,6 @@ import android.widget.Button;
 import static android.os.Debug.waitForDebugger;
 import static appdev2.gameofdeath.CellGridSurface.mInitialized;
 
-/**
- * Created by Kevin on 1/29/2018.
- */
-
 public class GameActivity extends AppCompatActivity {
     private int m_levelNumber;
     private CellGridSurface surface;
@@ -26,6 +22,8 @@ public class GameActivity extends AppCompatActivity {
         Bundle args = getIntent().getExtras();
         if(args != null) {
             m_levelNumber = args.getInt("Level");
+            // TODO: Move initial Cell generation (aka level setup) to here
+            // Need to pass value into CellGridSurface to do this. Not sure how just yet.
         }
 
         surface = findViewById(R.id.cellGridView);

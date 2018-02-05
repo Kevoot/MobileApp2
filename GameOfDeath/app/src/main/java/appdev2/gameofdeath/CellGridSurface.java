@@ -208,23 +208,6 @@ public class CellGridSurface extends SurfaceView {
             }
         }
 
-        // Used for testing cells on the canvas - will be deleted once things
-        // are further along
-        mCellGrid[0][0].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 1][yCellsCount - 1].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 1][yCellsCount - 3].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 2][yCellsCount - 2].type = CellType.ENEMY;
-
-        // Stable Structure (unchanging)
-        mCellGrid[xCellsCount - 5][yCellsCount - 5].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 4][yCellsCount - 6].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 5][yCellsCount - 7].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 6][yCellsCount - 6].type = CellType.PLAYER;
-
-        mCellGrid[5][5].type = CellType.PLAYER;
-        mCellGrid[4][6].type = CellType.PLAYER;
-        mCellGrid[6][6].type = CellType.PLAYER;
-
         mHandler.postDelayed(mRunnable, 1000);
     }
 
@@ -315,7 +298,49 @@ public class CellGridSurface extends SurfaceView {
             }
         }
 
+        DestroyOpposingCells();
+
         mCellGrid = future;
+    }
+
+    // Destroy any directly cells (perpendicular and diagonal)
+    // Priority given to perpendicular, vertically opposing cells
+    private void DestroyOpposingCells() {
+        // Check rest of cells
+        for (int i = 1; i < xCellsCount - 1; i++) {
+            for (int j = 1; j < yCellsCount - 1; j++) {
+                // Check Vertical, will get above and below
+                if(checkOppositions(mCellGrid[i][j], mCellGrid[i][j-1])) {
+                    mCellGrid[i][j].type = CellType.DEAD;
+                    mCellGrid[i][j-1].type = CellType.DEAD;
+                }
+                // Check horizontals
+                else if(checkOppositions(mCellGrid[i][j], mCellGrid[i][j-1])) {
+                    mCellGrid[i][j].type = CellType.DEAD;
+                    mCellGrid[i][j-1].type = CellType.DEAD;
+                }
+                // Check top-left and bottom-right
+                else if(checkOppositions(mCellGrid[i][j], mCellGrid[i-1][j-1])) {
+                    mCellGrid[i][j].type = CellType.DEAD;
+                    mCellGrid[i][j-1].type = CellType.DEAD;
+                }
+                // Check top-right and bottom-left
+                else if(checkOppositions(mCellGrid[i][j], mCellGrid[i+1][j-1])) {
+                    mCellGrid[i][j].type = CellType.DEAD;
+                    mCellGrid[i][j-1].type = CellType.DEAD;
+                }
+                if(((mCellGrid[i][j].type == CellType.PLAYER && mCellGrid[i][j-1].type == CellType.ENEMY) ||
+                        (mCellGrid[i][j].type == CellType.ENEMY && mCellGrid[i][j-1].type == CellType.PLAYER))) {
+                    mCellGrid[i][j].type = CellType.DEAD;
+                    mCellGrid[i][j-1].type = CellType.DEAD;
+                }
+            }
+        }
+    }
+
+    private boolean checkOppositions(Cell p1, Cell p2) {
+        return ((p1.type == CellType.PLAYER && p2.type == CellType.ENEMY) ||
+                (p1.type == CellType.ENEMY && p2.type == CellType.PLAYER));
     }
 
     public void pause() {

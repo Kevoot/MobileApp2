@@ -3,10 +3,6 @@ package appdev2.gameofdeath;
 import android.graphics.Color;
 import android.graphics.Paint;
 
-/**
- * Created by Kevin on 1/25/2018.
- */
-
 public class Cell {
     public CellType type;
 
@@ -19,6 +15,8 @@ public class Cell {
         cellPaint.setStrokeWidth(2);
         cellPaint.setStyle(Paint.Style.FILL_AND_STROKE);
         switch(this.type) {
+            case DYING:
+                cellPaint.setColor(Color.BLUE);
             case DEAD:
                 cellPaint.setColor(Color.TRANSPARENT);
                 return cellPaint;
@@ -42,6 +40,8 @@ public class Cell {
         cellPaint.setStrokeWidth(2);
         cellPaint.setStyle(Paint.Style.FILL_AND_STROKE);
         switch(type) {
+            case DYING:
+                cellPaint.setColor(Color.BLUE);
             case DEAD:
                 cellPaint.setColor(Color.TRANSPARENT);
                 return cellPaint;
