@@ -59,4 +59,6 @@ public class Cell {
                 return cellPaint;
         }
     }
+
+    public CellType getType(){ return type;}
 }

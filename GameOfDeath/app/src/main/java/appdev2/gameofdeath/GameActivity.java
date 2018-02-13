@@ -29,7 +29,7 @@ public class GameActivity extends AppCompatActivity {
         }
 
         surface = findViewById(R.id.cellGridView);
-
+        surface.setOnTouchListener(CellGridSurface.mPasteHandler);
         Button finishTurnButton = findViewById(R.id.game_container_finish_turn);
         finishTurnButton.setOnClickListener(new SurfaceView.OnClickListener() {
 
