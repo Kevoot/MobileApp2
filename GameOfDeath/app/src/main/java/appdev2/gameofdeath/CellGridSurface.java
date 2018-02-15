@@ -63,10 +63,7 @@ public class CellGridSurface extends SurfaceView {
     public int mDelay;
 
 
-    // preview bmp
-    Bitmap seed1 = BitmapFactory.decodeResource(getResources(), R.drawable.seed1);
-    int mDrawHeight = seed1.getHeight()/2;
-    int mDrawWidth = seed1.getWidth()/2;
+    //preview vals
     int mPreviewX;
     int  mPreviewY;
     public boolean drawPreview = false;
@@ -155,6 +152,8 @@ public class CellGridSurface extends SurfaceView {
                             drawPreview = true;
                             mPreviewX = (int) event.getX();
                             mPreviewY = (int) event.getY();
+                            if(mPreviewY < mViewSizeY/2)
+                                mPreviewY = mViewSizeY/2;
 
                             break;
                         case MotionEvent.ACTION_MOVE:
@@ -162,6 +161,8 @@ public class CellGridSurface extends SurfaceView {
                             drawPreview = true;
                             mPreviewX = (int) event.getX();
                             mPreviewY = (int) event.getY();
+                            if(mPreviewY < mViewSizeY/2)
+                                mPreviewY = mViewSizeY/2;
 
                             mPreviewX = mPreviewX - (mPreviewX % cellWidth);
                             mPreviewY = mPreviewY - (mPreviewY % cellHeight);
@@ -204,8 +205,7 @@ public class CellGridSurface extends SurfaceView {
         //copy seed grid to cell grid, preserving cells already on the grid.
         for(int i = leftX; i < leftX + seed1Width; i++) { // i = x
             for(int j = topY; j < topY + seed1Height; j++) { // j = y
-                if(mCellGrid[i][j].getType() == CellType.DEAD)
-                    mCellGrid[i][j] = mPreviewGrid[i-leftX][j-topY];
+                mCellGrid[i][j] = mPreviewGrid[i-leftX][j-topY];
             }
         }
         return;
@@ -396,15 +396,14 @@ public class CellGridSurface extends SurfaceView {
     }
 
     public void pause() {
-        waitForDebugger();
         cellThread.setRunning(false);
         while (cellThread.isAlive()) {
             // Wait
         }
+
         mHandler.removeCallbacks(mRunnable);
     }
     public void resume() {
-        waitForDebugger();
         mHandler.postDelayed(mRunnable, mDelay);
     }
 
