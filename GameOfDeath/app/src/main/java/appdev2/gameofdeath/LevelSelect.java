@@ -6,10 +6,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
-/**
- * Created by Kevin on 1/29/2018.
- */
-
 public class LevelSelect extends AppCompatActivity {
     private final String m_levelString = "Level";
 

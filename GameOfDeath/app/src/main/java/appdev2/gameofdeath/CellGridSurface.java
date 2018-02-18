@@ -261,22 +261,22 @@ public class CellGridSurface extends SurfaceView {
             }
         }
 
-        // Used for testing cells on the canvas - will be deleted once things
-        // are further along
+        // Testing cells
         mCellGrid[0][0].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 1][yCellsCount - 1].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 1][yCellsCount - 3].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 2][yCellsCount - 2].type = CellType.ENEMY;
+        mCellGrid[0][1].type = CellType.PLAYER;
+        mCellGrid[0][2].type = CellType.PLAYER;
+        mCellGrid[2][0].type = CellType.PLAYER;
+        mCellGrid[1][0].type = CellType.PLAYER;
+        mCellGrid[3][3].type = CellType.PLAYER;
+        mCellGrid[5][0].type = CellType.PLAYER;
+        mCellGrid[5][1].type = CellType.PLAYER;
+        mCellGrid[5][2].type = CellType.PLAYER;
+        mCellGrid[5][3].type = CellType.PLAYER;
 
-        // Stable Structure (unchanging)
-        mCellGrid[xCellsCount - 5][yCellsCount - 5].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 4][yCellsCount - 6].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 5][yCellsCount - 7].type = CellType.PLAYER;
-        mCellGrid[xCellsCount - 6][yCellsCount - 6].type = CellType.PLAYER;
-
-        mCellGrid[5][5].type = CellType.PLAYER;
-        mCellGrid[4][6].type = CellType.PLAYER;
-        mCellGrid[6][6].type = CellType.PLAYER;
+        mCellGrid[4][0].type = CellType.ENEMY;
+        mCellGrid[4][1].type = CellType.ENEMY;
+        mCellGrid[4][2].type = CellType.ENEMY;
+        mCellGrid[4][3].type = CellType.ENEMY;
 
 
         mPreviewGrid[seed1Width - 1][seed1Height - 1].type = CellType.PLAYER;
@@ -361,16 +361,18 @@ public class CellGridSurface extends SurfaceView {
             {
                 // finding no Of Neighbours that are alive
                 int aliveNeighbours = 0;
-                for (int i = -1; i <= 1; i++)
+                /*for (int i = -1; i <= 1; i++)
                     for (int j = -1; j <= 1; j++)
                         if(mCellGrid[l + i][m + j].type == type) {
                             aliveNeighbours += 1;
                         }
+                */
                 // The cell needs to be subtracted from
                 // its neighbours as it was counted before
-                if(mCellGrid[l][m].type == type) {
+                aliveNeighbours = countNeighbors(mCellGrid, l, m, mCellGrid[l][m].type);
+                /*if(mCellGrid[l][m].type == type) {
                     aliveNeighbours -= 1;
-                }
+                }*/
 
                 // Implementing the Rules of Life
 
@@ -392,7 +394,88 @@ public class CellGridSurface extends SurfaceView {
             }
         }
 
+        DestroyOpposingCells(future);
+
         mCellGrid = future;
+    }
+
+    private int countNeighbors(final Cell[][] generation, final int row, final int col, final CellType type) {
+        int numNeighbors = 0;
+
+        // Look NW
+        if ((row - 1 >= 0) && (col - 1 >= 0)) {
+            numNeighbors = generation[row - 1][col - 1].type == type ? numNeighbors + 1 : numNeighbors;
+        }
+        // Look W
+        if ((row >= 0) && (col - 1 >= 0)) {
+            numNeighbors = generation[row][col - 1].type == type ? numNeighbors + 1 : numNeighbors;
+        }
+        // Look SW
+        if ((row + 1 < generation.length) && (col - 1 >= 0)) {
+            numNeighbors = generation[row + 1][col - 1].type == type ? numNeighbors + 1 : numNeighbors;
+        }
+        // Look S
+        if ((row + 1 < generation.length) && (col < generation[0].length)) {
+            numNeighbors = generation[row + 1][col].type == type ? numNeighbors + 1 : numNeighbors;
+        }
+        // Look SE
+        if ((row + 1 < generation.length) && (col + 1 < generation[0].length)) {
+            numNeighbors = generation[row + 1][col + 1].type == type ? numNeighbors + 1 : numNeighbors;
+        }
+        // Look E
+        if ((row < generation.length) && (col + 1 < generation[0].length)) {
+            numNeighbors = generation[row][col + 1].type == type ? numNeighbors + 1 : numNeighbors;
+        }
+        // Look NE
+        if ((row - 1 >= 0) && (col + 1 < generation[0].length)) {
+            numNeighbors = generation[row - 1][col + 1].type == type ? numNeighbors + 1 : numNeighbors;
+        }
+        // Look N
+        if ((row - 1 >= 0) && (col < generation[0].length)) {
+            numNeighbors = generation[row - 1][col].type == type ? numNeighbors + 1 : numNeighbors;
+        }
+
+        return numNeighbors;
+    }
+
+    // Destroy any directly cells (perpendicular and diagonal)
+    // Priority given to perpendicular, vertically opposing cells
+    private void DestroyOpposingCells(final Cell[][] grid) {
+        // Check rest of cells
+        for (int i = 1; i < xCellsCount - 1; i++) {
+            for (int j = 1; j < yCellsCount - 1; j++) {
+                // Check Vertical, will get above and below
+                if(checkOppositions(grid[i][j], grid[i][j-1])) {
+                    grid[i][j].type = CellType.DEAD;
+                    grid[i][j-1].type = CellType.DEAD;
+                }
+                // Check horizontals
+                else if(checkOppositions(grid[i][j], grid[i][j-1])) {
+                    grid[i][j].type = CellType.DEAD;
+                    grid[i][j-1].type = CellType.DEAD;
+                }
+                // Check top-left and bottom-right
+                else if(checkOppositions(grid[i][j], grid[i-1][j-1])) {
+                    grid[i][j].type = CellType.DEAD;
+                    grid[i][j-1].type = CellType.DEAD;
+                }
+                // Check top-right and bottom-left
+                else if(checkOppositions(mCellGrid[i][j], mCellGrid[i+1][j-1])) {
+                    grid[i][j].type = CellType.DEAD;
+                    grid[i][j-1].type = CellType.DEAD;
+                }
+                if(((grid[i][j].type == CellType.PLAYER && grid[i][j-1].type == CellType.ENEMY) ||
+                        (mCellGrid[i][j].type == CellType.ENEMY && mCellGrid[i][j-1].type == CellType.PLAYER))) {
+                    mCellGrid[i][j].type = CellType.DEAD;
+                    mCellGrid[i][j-1].type = CellType.DEAD;
+                }
+            }
+        }
+    }
+
+    private boolean checkOppositions(Cell p1, Cell p2) {
+        return ((p1.type == CellType.PLAYER && p2.type == CellType.ENEMY) ||
+                (p1.type == CellType.ENEMY && p2.type == CellType.PLAYER));
     }
 
     public void pause() {
