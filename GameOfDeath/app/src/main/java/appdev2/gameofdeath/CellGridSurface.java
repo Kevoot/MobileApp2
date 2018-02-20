@@ -205,7 +205,8 @@ public class CellGridSurface extends SurfaceView {
         //copy seed grid to cell grid, preserving cells already on the grid.
         for(int i = leftX; i < leftX + seed1Width; i++) { // i = x
             for(int j = topY; j < topY + seed1Height; j++) { // j = y
-                mCellGrid[i][j] = mPreviewGrid[i-leftX][j-topY];
+                if(mPreviewGrid[i - leftX][j - topY].getType() == CellType.PLAYER)
+                    mCellGrid[i][j] = mPreviewGrid[i-leftX][j-topY];
             }
         }
         return;
