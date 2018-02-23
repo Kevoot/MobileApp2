@@ -9,6 +9,7 @@ package appdev2.gameofdeath;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -34,7 +35,7 @@ public class CellGridSurface extends SurfaceView {
 
     // Only one of these should be loaded at any given time.
     // Attach any given one of them to the mHandler
-    public final OnTouchListener mPasteHandler;
+    public static OnTouchListener mPasteHandler;
 
     // Indicates if the initial Grid has it's cellGrid initialized;
     public static boolean mInitialized = false;
@@ -54,11 +55,22 @@ public class CellGridSurface extends SurfaceView {
     // Pasting Grid
     public Cell[][] mPasteGrid;
 
+
     // Cells per grid in X and Y directions, as well as sizes in pixels
     private int xCellsCount, yCellsCount, cellWidth, cellHeight;
 
     // Delay in milliseconds between each simulation step
     public int mDelay;
+
+
+    //preview vals
+    int mPreviewX;
+    int  mPreviewY;
+    public boolean drawPreview = false;
+    public boolean isDebug = true;
+    public Cell[][] mPreviewGrid;
+    int seed1Width = 2;
+    int seed1Height = 3;
 
     // horizontal and vertical grid-based line locations
     public int[] horizontalLineLocations;
@@ -80,7 +92,7 @@ public class CellGridSurface extends SurfaceView {
     // Will be used for custom backdrops
     private Bitmap mCurrentBg;
     // Will be used for pasting a preview
-    private Bitmap mPreviewBitmap;
+    private Bitmap mPreviewBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.seed1);;
 
     private SurfaceHolder holder;
     private CellGridLoopThread cellThread;
@@ -131,29 +143,47 @@ public class CellGridSurface extends SurfaceView {
             public boolean onTouch(View v, MotionEvent event) {
                 if(mPreviewBitmap == null) throw new Error("No Preview Bitmap found!");
                 Canvas c = null;
+
                 try {
                     c = getHolder().lockCanvas();
-                    int x = 0;
-                    int y = 0;
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
                             // Paste initial preview over grid
+                            drawPreview = true;
+                            mPreviewX = (int) event.getX();
+                            mPreviewY = (int) event.getY();
+                            if(mPreviewY < mViewSizeY/2)
+                                mPreviewY = mViewSizeY/2;
+
                             break;
                         case MotionEvent.ACTION_MOVE:
                             // Drag it around
+                            drawPreview = true;
+                            mPreviewX = (int) event.getX();
+                            mPreviewY = (int) event.getY();
+                            if(mPreviewY < mViewSizeY/2)
+                                mPreviewY = mViewSizeY/2;
+
+                            mPreviewX = mPreviewX - (mPreviewX % cellWidth);
+                            mPreviewY = mPreviewY - (mPreviewY % cellHeight);
+
                             break;
                         case MotionEvent.ACTION_UP:
                             // Copy cells into grid
+                            //need to implement, will
+                            drawPreview = false;
+                            copyToGrid(mPreviewX / cellWidth, mPreviewY / cellHeight);
                             v.performClick();
                             break;
                         default:
                             break;
                     }
+                    CellGridSurface.super.postInvalidate();
                     synchronized (getHolder()) {
                         // x and y = top left coordinate of surface
                         // Will have to create a bitmap and draw to it as above during each event
                         // as they are handled
-                        draw(c);
+
                     }
                 }
                 finally {
@@ -165,6 +195,24 @@ public class CellGridSurface extends SurfaceView {
             }
         };
     }
+
+    //copy the seed to the grid
+    //will have an 2d array for each seed that's filled in with player/
+    public void copyToGrid(int leftX, int topY) {
+        //check it won't go out of bounds
+        if (leftX + seed1Width > mCellGrid.length || topY + seed1Height > mCellGrid[0].length)
+            return;
+        //copy seed grid to cell grid, preserving cells already on the grid.
+        for(int i = leftX; i < leftX + seed1Width; i++) { // i = x
+            for(int j = topY; j < topY + seed1Height; j++) { // j = y
+                if(mPreviewGrid[i - leftX][j - topY].getType() == CellType.PLAYER)
+                    mCellGrid[i][j] = mPreviewGrid[i-leftX][j-topY];
+            }
+        }
+        return;
+    }
+
+
 
     // For transferring cells from a paste fragment.
     // TODO: This will need to be reworked.
@@ -201,10 +249,16 @@ public class CellGridSurface extends SurfaceView {
         // mCellGrid = new Cell[mGridSizeX][mGridSizeY];
         mCellGrid = new Cell[xCellsCount][yCellsCount];
 
+        mPreviewGrid = new Cell[seed1Width][seed1Height];
         // initialize all to dead at first via default constructor
         for(int i = 0; i < mCellGrid.length; i++) {
             for(int j = 0; j < mCellGrid[i].length; j++) {
                 mCellGrid[i][j] = new Cell();
+            }
+        }
+        for(int i = 0; i < mPreviewGrid.length; i++) {
+            for(int j = 0; j < mPreviewGrid[i].length; j++) {
+                mPreviewGrid[i][j] = new Cell();
             }
         }
 
@@ -225,6 +279,13 @@ public class CellGridSurface extends SurfaceView {
         mCellGrid[4][2].type = CellType.ENEMY;
         mCellGrid[4][3].type = CellType.ENEMY;
 
+
+        mPreviewGrid[seed1Width - 1][seed1Height - 1].type = CellType.PLAYER;
+        mPreviewGrid[seed1Width - 1][seed1Height - 3].type = CellType.PLAYER;
+        mPreviewGrid[seed1Width - 2][seed1Height - 2].type = CellType.PLAYER;
+
+
+
         mHandler.postDelayed(mRunnable, 1000);
     }
 
@@ -235,9 +296,25 @@ public class CellGridSurface extends SurfaceView {
             mInitialized = true;
         }
 
+        if(drawPreview) {
+            canvas.drawBitmap(mPreviewBitmap, mPreviewX, mPreviewY, null);
+        }
+
+        if(isDebug)
+        {
+            Paint dbPaint = new Paint();
+            dbPaint.setStyle(Paint.Style.FILL);
+            dbPaint.setTextSize(80);
+            dbPaint.setColor(Color.WHITE);
+            canvas.drawText("CellWidth: " + (Integer.toString(cellWidth)), 700, 100, dbPaint);
+            canvas.drawText("Cell Height: " + (Integer.toString(cellHeight)), 700, 200, dbPaint);
+            canvas.drawText("X: " + (Integer.toString(mPreviewX)), 700, 300, dbPaint);
+            canvas.drawText("Y: " + (Integer.toString(mPreviewY)), 700, 400, dbPaint);
+        }
+
         // Paint each cell according to their internal color
-        for(int i = 0; i < xCellsCount; i++) {
-            for(int j = 0; j < yCellsCount; j++) {
+        for(int i = 0; i < xCellsCount; i++) { // i = x
+            for(int j = 0; j < yCellsCount; j++) { // j = y
                 if(mCellGrid[i][j] == null) {
                     canvas.drawRect(i*cellWidth, j*cellHeight, (i*cellWidth) + cellWidth,
                             (j*cellHeight) + cellHeight, getTypeColorFromType(DEAD));
@@ -246,6 +323,7 @@ public class CellGridSurface extends SurfaceView {
                         (j*cellHeight) + cellHeight, mCellGrid[i][j].getTypeColor());
             }
         }
+
     }
 
     // This constantly resets enemy, player, dead, or blocked cells so they can be repainted
@@ -402,15 +480,14 @@ public class CellGridSurface extends SurfaceView {
     }
 
     public void pause() {
-        waitForDebugger();
         cellThread.setRunning(false);
         while (cellThread.isAlive()) {
             // Wait
         }
+
         mHandler.removeCallbacks(mRunnable);
     }
     public void resume() {
-        waitForDebugger();
         mHandler.postDelayed(mRunnable, mDelay);
     }
 
