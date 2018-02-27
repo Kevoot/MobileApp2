@@ -6,6 +6,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
+
+import org.w3c.dom.Text;
+
 import java.util.List;
 
 /**
@@ -22,10 +26,12 @@ public class GamePanelAdapter extends RecyclerView.Adapter<GamePanelAdapter.View
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         public ImageView seed_map;
+        public TextView seed_cost;
 
         public ViewHolder(View view) {
             super(view);
             seed_map = (ImageView) view.findViewById(R.id.seed_map);
+            seed_cost = (TextView) view.findViewById(R.id.seed_cost);
         }
     }
 
@@ -41,6 +47,7 @@ public class GamePanelAdapter extends RecyclerView.Adapter<GamePanelAdapter.View
     public void onBindViewHolder(ViewHolder holder, int position) {
         Bitmap seed = SeedList.get(position);
         holder.seed_map.setImageBitmap(seed);
+        holder.seed_cost.setText("5");
     }
 
     @Override
