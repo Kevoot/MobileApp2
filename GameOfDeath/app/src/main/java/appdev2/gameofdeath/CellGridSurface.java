@@ -60,8 +60,10 @@ public class CellGridSurface extends SurfaceView {
     private int xCellsCount, yCellsCount, cellWidth, cellHeight;
 
     // Delay in milliseconds between each simulation step
-    public int mDelay;
-
+    int mDelay = 20;
+    long mLastTime = -1;
+    long mUpdateTime = 500;
+    boolean nextStep = false;
 
     //preview vals
     int mPreviewX;
@@ -212,7 +214,7 @@ public class CellGridSurface extends SurfaceView {
         return;
     }
 
-
+    public void updateFPS(long newUpdateTime) {cellThread.setFPS(newUpdateTime);}
 
     // For transferring cells from a paste fragment.
     // TODO: This will need to be reworked.
@@ -228,8 +230,55 @@ public class CellGridSurface extends SurfaceView {
         }
     }
 
-    public void completeTurn(CellType type) {
-        step(CellType.PLAYER);
+    /*public void completeTurn(CellType type, int steps) {
+        //add a checker to run step only every 500ms
+        Canvas c = null;
+        for(int i = 0; i < steps; i++) {
+            step(CellType.PLAYER);
+            postInvalidate();
+            invalidate();
+            try {
+                c = getHolder().lockCanvas();
+                synchronized (getHolder()) {
+                    draw(c);
+                }
+            } finally {
+                if (c != null) {
+                    getHolder().unlockCanvasAndPost(c);
+                }
+            }
+            try {
+                Thread.sleep(300);
+            }catch (InterruptedException e) { }
+        }
+
+    }*/
+
+    public void completeTurn(CellType type, int steps) {
+        //add a checker to run step only every 500ms
+        Canvas c = null;
+        for(int i = 0; i < steps; i++) {
+            step(CellType.PLAYER);
+            postInvalidate();
+            invalidate();
+            try {
+                c = getHolder().lockCanvas();
+                synchronized (getHolder()) {
+                    draw(c);
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+            finally {
+                if (c != null) {
+                    getHolder().unlockCanvasAndPost(c);
+                }
+            }
+            try {
+                Thread.sleep(300);
+            }catch (InterruptedException e) { }
+        }
+
     }
 
     // Initialize grid size and start the runnable/thread for drawing
@@ -286,7 +335,7 @@ public class CellGridSurface extends SurfaceView {
 
 
 
-        mHandler.postDelayed(mRunnable, 1000);
+        mHandler.postDelayed(mRunnable, 250);
     }
 
     @Override
@@ -323,6 +372,7 @@ public class CellGridSurface extends SurfaceView {
                         (j*cellHeight) + cellHeight, mCellGrid[i][j].getTypeColor());
             }
         }
+        nextStep = true;
 
     }
 
@@ -398,6 +448,7 @@ public class CellGridSurface extends SurfaceView {
         DestroyOpposingCells(future);
 
         mCellGrid = future;
+        nextStep = false;
     }
 
     private int countNeighbors(final Cell[][] generation, final int row, final int col, final CellType type) {

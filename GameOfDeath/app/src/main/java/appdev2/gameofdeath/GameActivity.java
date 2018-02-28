@@ -20,6 +20,10 @@ import static appdev2.gameofdeath.CellGridSurface.mInitialized;
 public class GameActivity extends AppCompatActivity {
     private int m_levelNumber;
     private CellGridSurface surface;
+    int steps = 5;
+    long mStepDelay = 300;
+    long mLastTime = -1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,11 +44,11 @@ public class GameActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                waitForDebugger();
+                //waitForDebugger();
                 // TODO: This is for testing, will need to receive ENEMY or PLAYER for each round.
-                surface.pause();
-                surface.completeTurn(CellType.PLAYER);
-                surface.resume();
+                //surface.pause();
+                surface.completeTurn(CellType.PLAYER, 3);
+
             }
         });
 

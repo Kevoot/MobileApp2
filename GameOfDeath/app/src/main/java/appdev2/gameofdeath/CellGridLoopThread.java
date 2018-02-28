@@ -20,6 +20,9 @@ public class CellGridLoopThread extends Thread {
     }
 
 
+    public void setFPS(long newUpdateTime) {mUpdateTime = newUpdateTime;}
+    public long getFPS() {return mUpdateTime;}
+
     @Override
     public void run() {
         while (running) {
