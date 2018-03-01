@@ -60,10 +60,10 @@ public class CellGridSurface extends SurfaceView {
     private int xCellsCount, yCellsCount, cellWidth, cellHeight;
 
     // Delay in milliseconds between each simulation step
-    int mDelay = 20;
+    int mDelay = 0;
+    int stepDelay = 500; // how long between steps
     long mLastTime = -1;
     long mUpdateTime = 500;
-    boolean nextStep = false;
 
     //preview vals
     int mPreviewX;
@@ -138,6 +138,7 @@ public class CellGridSurface extends SurfaceView {
             }
 
         });
+
 
         // TODO: This needs reworking, should be easier now that the cells width/heigh are defined
         mPasteHandler = new OnTouchListener() {
@@ -230,55 +231,31 @@ public class CellGridSurface extends SurfaceView {
         }
     }
 
-    /*public void completeTurn(CellType type, int steps) {
-        //add a checker to run step only every 500ms
-        Canvas c = null;
-        for(int i = 0; i < steps; i++) {
-            step(CellType.PLAYER);
-            postInvalidate();
-            invalidate();
-            try {
-                c = getHolder().lockCanvas();
-                synchronized (getHolder()) {
-                    draw(c);
+    public void completeTurn(final CellType type, int steps) {
+        for (int i = 0; i < steps; i++) {
+            // postDelayed fixes this because it tells the GPU to draw on next cycle otherwise, it has already passed the draw by now. Kinda odd, but it is what it is.. lol
+            postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Canvas c = null;
+                    step(type);
+                    invalidate();
+
+                    try {
+                        c = getHolder().lockCanvas();
+                        synchronized (getHolder()) {
+                            draw(c);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (c != null) {
+                            getHolder().unlockCanvasAndPost(c);
+                        }
+                    }
                 }
-            } finally {
-                if (c != null) {
-                    getHolder().unlockCanvasAndPost(c);
-                }
-            }
-            try {
-                Thread.sleep(300);
-            }catch (InterruptedException e) { }
+            }, stepDelay*i);
         }
-
-    }*/
-
-    public void completeTurn(CellType type, int steps) {
-        //add a checker to run step only every 500ms
-        Canvas c = null;
-        for(int i = 0; i < steps; i++) {
-            step(CellType.PLAYER);
-            postInvalidate();
-            invalidate();
-            try {
-                c = getHolder().lockCanvas();
-                synchronized (getHolder()) {
-                    draw(c);
-                }
-            } catch (Exception e){
-                e.printStackTrace();
-            }
-            finally {
-                if (c != null) {
-                    getHolder().unlockCanvasAndPost(c);
-                }
-            }
-            try {
-                Thread.sleep(300);
-            }catch (InterruptedException e) { }
-        }
-
     }
 
     // Initialize grid size and start the runnable/thread for drawing
@@ -372,7 +349,6 @@ public class CellGridSurface extends SurfaceView {
                         (j*cellHeight) + cellHeight, mCellGrid[i][j].getTypeColor());
             }
         }
-        nextStep = true;
 
     }
 
@@ -448,7 +424,6 @@ public class CellGridSurface extends SurfaceView {
         DestroyOpposingCells(future);
 
         mCellGrid = future;
-        nextStep = false;
     }
 
     private int countNeighbors(final Cell[][] generation, final int row, final int col, final CellType type) {
