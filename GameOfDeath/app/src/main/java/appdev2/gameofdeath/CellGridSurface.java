@@ -61,7 +61,10 @@ public class CellGridSurface extends SurfaceView {
     private int xCellsCount, yCellsCount, cellWidth, cellHeight;
 
     // Delay in milliseconds between each simulation step
-    public int mDelay;
+    int mDelay = 0;
+    int stepDelay = 500; // how long between steps
+    long mLastTime = -1;
+    long mUpdateTime = 500;
 
     // Paint for the grid lines
     Paint linePaint = new Paint();
@@ -145,6 +148,7 @@ public class CellGridSurface extends SurfaceView {
             }
 
         });
+
 
         // TODO: This needs reworking, should be easier now that the cells width/heigh are defined
         mPasteHandler = new OnTouchListener() {
@@ -293,7 +297,9 @@ public class CellGridSurface extends SurfaceView {
         mCellGrid[leftX/cellWidth][topY/cellHeight].type = CellType.PLAYER;
     }
 
-
+    public void updateFPS(long newUpdateTime) {
+        cellThread.setFPS(newUpdateTime);
+    }
 
     // For transferring cells from a paste fragment.
     // TODO: This will need to be reworked.
@@ -309,8 +315,31 @@ public class CellGridSurface extends SurfaceView {
         }
     }
 
-    public void completeTurn(CellType type) {
-        step(CellType.PLAYER);
+    public void completeTurn(final CellType type, int steps) {
+        for (int i = 0; i < steps; i++) {
+            // postDelayed fixes this because it tells the GPU to draw on next cycle otherwise, it has already passed the draw by now. Kinda odd, but it is what it is.. lol
+            postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Canvas c = null;
+                    step(type);
+                    invalidate();
+
+                    try {
+                        c = getHolder().lockCanvas();
+                        synchronized (getHolder()) {
+                            draw(c);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (c != null) {
+                            getHolder().unlockCanvasAndPost(c);
+                        }
+                    }
+                }
+            }, stepDelay*i);
+        }
     }
 
     // Initialize grid size and start the runnable/thread for drawing
@@ -367,7 +396,7 @@ public class CellGridSurface extends SurfaceView {
 
 
 
-        mHandler.postDelayed(mRunnable, 1000);
+        mHandler.postDelayed(mRunnable, 250);
     }
 
     @Override
