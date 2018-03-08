@@ -36,7 +36,6 @@ public class CellGridSurface extends SurfaceView {
     // Only one of these should be loaded at any given time.
     // Attach any given one of them to the mHandler
     public static OnTouchListener mPasteHandler;
-    public static OnTouchListener mPaintHandler;
 
     // Indicates if the initial Grid has it's cellGrid initialized;
     public static boolean mInitialized = false;
@@ -65,9 +64,6 @@ public class CellGridSurface extends SurfaceView {
     int stepDelay = 500; // how long between steps
     long mLastTime = -1;
     long mUpdateTime = 500;
-
-    // Paint for the grid lines
-    Paint linePaint = new Paint();
 
     //preview vals
     int mPreviewX;
@@ -116,13 +112,7 @@ public class CellGridSurface extends SurfaceView {
         xCellsCount = 20;
         yCellsCount = 36;
 
-        // Settings for the grid lines
-        linePaint.setStrokeWidth(2);
-        linePaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        linePaint.setColor(Color.WHITE);
-
-
-                // Responsible for starting drawing thread
+        // Responsible for starting drawing thread
         holder.addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
@@ -207,70 +197,6 @@ public class CellGridSurface extends SurfaceView {
                 return true;
             }
         };
-
-        // TODO: This needs reworking, should be easier now that the cells width/heigh are defined
-        mPaintHandler = new OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                Canvas c = null;
-
-                try {
-                    int paintX = 0, paintY = 0;
-                    c = getHolder().lockCanvas();
-                    switch (event.getAction()) {
-                        case MotionEvent.ACTION_DOWN:
-                            // Paste initial preview over grid
-                            // drawPreview = true;
-                            paintX = (int) event.getX();
-                            paintY = (int) event.getY();
-                            // Check X's
-                            if(paintX <= 0) {
-                                paintX = 1;
-                            }
-                            else if(paintX >= mViewSizeX) {
-                                paintX = mViewSizeX - 1;
-                            }
-                            // Check Y's
-                            if(paintY < mViewSizeY/2) {
-                                paintY = mViewSizeY / 2;
-                            }
-                            else if(paintY >= mViewSizeY - cellHeight) {
-                                paintY = mViewSizeY - cellHeight;
-                            }
-
-                            c.drawRect(paintX, paintY, paintX + cellWidth,
-                                        paintY + cellHeight, Cell.getTypeColorFromType(CellType.PLAYER));
-                            setPaintCellPlayer(paintX, paintY);
-                            break;
-                        case MotionEvent.ACTION_MOVE:
-                            // Do nothing, since we only want to click cells to color,
-                            // never dragging around
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            c.drawRect(paintX, paintY, paintX + cellWidth,
-                                    paintY + cellHeight, Cell.getTypeColorFromType(CellType.PLAYER));
-                            setPaintCellPlayer(paintX, paintY);
-                            v.performClick();
-                            break;
-                        default:
-                            break;
-                    }
-                    CellGridSurface.super.postInvalidate();
-                    synchronized (getHolder()) {
-                        // x and y = top left coordinate of surface
-                        // Will have to create a bitmap and draw to it as above during each event
-                        // as they are handled
-
-                    }
-                }
-                finally {
-                    if (c != null) {
-                        getHolder().unlockCanvasAndPost(c);
-                    }
-                }
-                return true;
-            }
-        };
     }
 
     //copy the seed to the grid
@@ -289,17 +215,7 @@ public class CellGridSurface extends SurfaceView {
         return;
     }
 
-    public void setPaintCellPlayer(int leftX, int topY) {
-        /*if(leftX >= mViewSizeX)
-            leftX = mViewSizeX -1;
-        if(topY >= mViewSizeY - cellHeight)
-            topY = mViewSizeY - cellHeight - 1;*/
-        mCellGrid[leftX/cellWidth][topY/cellHeight].type = CellType.PLAYER;
-    }
-
-    public void updateFPS(long newUpdateTime) {
-        cellThread.setFPS(newUpdateTime);
-    }
+    public void updateFPS(long newUpdateTime) {cellThread.setFPS(newUpdateTime);}
 
     // For transferring cells from a paste fragment.
     // TODO: This will need to be reworked.
@@ -434,15 +350,6 @@ public class CellGridSurface extends SurfaceView {
             }
         }
 
-        // Now draw lines for the overall grid
-        for(int i = 1; i < xCellsCount; i++) {
-            for(int j = 1; j < yCellsCount; j++) {
-                canvas.drawLine(i * cellWidth, 1, i * cellWidth,
-                        mViewSizeY - 1, linePaint);
-                canvas.drawLine(1, j * cellHeight, mViewSizeX - 1,
-                        j * cellHeight, linePaint);
-            }
-        }
     }
 
     // This constantly resets enemy, player, dead, or blocked cells so they can be repainted
@@ -481,18 +388,18 @@ public class CellGridSurface extends SurfaceView {
             {
                 // finding no Of Neighbours that are alive
                 int aliveNeighbours = 0;
-                for (int i = -1; i <= 1; i++)
+                /*for (int i = -1; i <= 1; i++)
                     for (int j = -1; j <= 1; j++)
                         if(mCellGrid[l + i][m + j].type == type) {
                             aliveNeighbours += 1;
                         }
+                */
                 // The cell needs to be subtracted from
                 // its neighbours as it was counted before
-
-                // aliveNeighbours = countNeighbors(mCellGrid, l, m, mCellGrid[l][m].type);
-                if(mCellGrid[l][m].type == type) {
+                aliveNeighbours = countNeighbors(mCellGrid, l, m, mCellGrid[l][m].type);
+                /*if(mCellGrid[l][m].type == type) {
                     aliveNeighbours -= 1;
-                }
+                }*/
 
                 // Implementing the Rules of Life
 
