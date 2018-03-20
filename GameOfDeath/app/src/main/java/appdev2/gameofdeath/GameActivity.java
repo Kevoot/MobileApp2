@@ -16,12 +16,14 @@ import android.support.v7.widget.LinearLayoutManager;
 
 import static android.os.Debug.waitForDebugger;
 import static appdev2.gameofdeath.CellGridSurface.mInitialized;
+import static appdev2.gameofdeath.CellGridSurface.whichBox;
 
 public class GameActivity extends AppCompatActivity {
     private int m_levelNumber;
     private CellGridSurface surface;
     int steps = 5;
-
+    public static boolean boolPaste = false;
+    public static RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,20 +57,53 @@ public class GameActivity extends AppCompatActivity {
         Bitmap b = Bitmap.createBitmap(200, 200,  Bitmap.Config.ARGB_8888);
         b.eraseColor(Color.RED);
 
+
+        Bitmap c = Bitmap.createBitmap(200, 200,  Bitmap.Config.ARGB_8888);
+        c.eraseColor(Color.CYAN);
+
+        Bitmap d = Bitmap.createBitmap(200, 200,  Bitmap.Config.ARGB_8888);
+        d.eraseColor(Color.GREEN);
+
+        Bitmap e = Bitmap.createBitmap(200, 200,  Bitmap.Config.ARGB_8888);
+        e.eraseColor(Color.BLUE);
+
+
         //
         List<Bitmap> SeedList = new ArrayList<>();
         SeedList.add(b);
+        SeedList.add(c);
+        SeedList.add(d);
+        SeedList.add(e);
         SeedList.add(b);
-        SeedList.add(b);
-        SeedList.add(b);
-        SeedList.add(b);
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.controlPanel);
+        recyclerView = (RecyclerView) findViewById(R.id.controlPanel);
         RecyclerView.LayoutManager mLayoutManager =
                 new LinearLayoutManager(GameActivity.this, LinearLayoutManager.HORIZONTAL, false);
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-        GamePanelAdapter mAdapter = new GamePanelAdapter(SeedList);
+        final GamePanelAdapter mAdapter = new GamePanelAdapter(SeedList, new ClickListener() {
+            @Override
+            public void onPositionClicked(int position) {
+                if(!boolPaste){
+                    surface.setOnTouchListener(CellGridSurface.mPasteHandler);
+                    whichBox = "Box " + Integer.toString(position);
+                    boolPaste = true;
+                } else {
+                    surface.setOnTouchListener(CellGridSurface.mPaintHandler);
+                    whichBox = "";
+                    boolPaste = false;
+                }
+                recyclerView.performClick();
+
+            }
+
+            @Override
+            public void onLongClicked(int position) {
+
+            }
+        });
         recyclerView.setAdapter(mAdapter);
+
+
 
         // Need bitmaps
 
@@ -84,6 +119,11 @@ public class GameActivity extends AppCompatActivity {
 //                surface.resume();
 //            }
 //        });
+    }
+
+
+    public static void ClickRecycler(){
+        recyclerView.findViewHolderForAdapterPosition(0).itemView.performClick();
     }
 
     @Override

@@ -8,7 +8,7 @@ public class CellGridLoopThread extends Thread {
     //used to keep track of time since last update, only need to update every few ms.
     //may need to increase value
     long mLastTime = -1;
-    long mUpdateTime = 20;
+    long mUpdateTime = 50;
 
 
     public CellGridLoopThread(CellGridSurface view) {

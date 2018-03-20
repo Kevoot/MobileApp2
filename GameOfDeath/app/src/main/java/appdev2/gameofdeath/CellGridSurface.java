@@ -77,6 +77,7 @@ public class CellGridSurface extends SurfaceView {
     public Cell[][] mPreviewGrid;
     int seed1Width = 2;
     int seed1Height = 3;
+    public static String whichBox = "";
 
     // horizontal and vertical grid-based line locations
     public int[] horizontalLineLocations;
@@ -187,6 +188,7 @@ public class CellGridSurface extends SurfaceView {
                             drawPreview = false;
                             copyToGrid(mPreviewX / cellWidth, mPreviewY / cellHeight);
                             v.performClick();
+                            GameActivity.ClickRecycler();
                             break;
                         default:
                             break;
@@ -420,6 +422,8 @@ public class CellGridSurface extends SurfaceView {
             canvas.drawText("Cell Height: " + (Integer.toString(cellHeight)), 700, 200, dbPaint);
             canvas.drawText("X: " + (Integer.toString(mPreviewX)), 700, 300, dbPaint);
             canvas.drawText("Y: " + (Integer.toString(mPreviewY)), 700, 400, dbPaint);
+            canvas.drawText(whichBox, 700, 500, dbPaint);
+
         }
 
         // Paint each cell according to their internal color

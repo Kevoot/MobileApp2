@@ -6,35 +6,66 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 /**
  * Created by Jessica on 2/13/18.
  */
 
+
+
 public class GamePanelAdapter extends RecyclerView.Adapter<GamePanelAdapter.ViewHolder>{
-    private List<Bitmap> SeedList;
     private LayoutInflater mInflater;
 
-    public GamePanelAdapter(List<Bitmap> SeedList) {
+    private ClickListener listener;
+    private List<Bitmap> SeedList;
+
+
+    public GamePanelAdapter(List<Bitmap> SeedList, ClickListener listener) {
+        this.listener = listener;
         this.SeedList = SeedList;
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        public ImageView seed_map;
 
-        public ViewHolder(View view) {
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        private ImageView seed_map;
+        private WeakReference<ClickListener> listenerRef;
+
+        public ViewHolder(View view, ClickListener listener) {
             super(view);
-            seed_map = (ImageView) view.findViewById(R.id.seed_map);
+
+            listenerRef = new WeakReference<>(listener);
+            seed_map = view.findViewById(R.id.seed_map);
+
+            view.setOnClickListener(this);
+            seed_map.setOnClickListener(this);
         }
+
+        @Override
+        public void onClick(View v){
+            if (v.getId() == seed_map.getId()) {
+                    Toast.makeText(v.getContext(), "BOX SELECTED = " + String.valueOf(getAdapterPosition()), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(v.getContext(), "ROW PRESSED = " + String.valueOf(getAdapterPosition()), Toast.LENGTH_SHORT).show();
+            }
+
+
+            listenerRef.get().onPositionClicked(getAdapterPosition());
+
+        }
+
+
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.gamepanel_item, parent, false);
 
-        return new ViewHolder(itemView);
+        return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.gamepanel_item, parent, false), listener);
+
     }
 
     @Override
