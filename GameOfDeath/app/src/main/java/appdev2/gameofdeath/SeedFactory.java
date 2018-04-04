@@ -9,7 +9,7 @@ import java.util.HashMap;
 public class SeedFactory {
 
     //map between seed name and seed itself
-    private HashMap<String, Seed> mSeedMap;
+    private HashMap<SeedType, Seed> mSeedMap;
 
     private Seed mDefaultSeed;
 
@@ -29,22 +29,47 @@ public class SeedFactory {
         *The Following is the creation of the different seeds we want. *
         ****************************************************************/
 
-        //Example Seed - Basic Spaceship
+        //Example Seed - Angle Spaceship
         int[][] seed1Grid = {
                 {0,0,1},
                 {1,0,1},
                 {0,1,1}};
-        String seed1Name = "Basic Spaceship";
+        SeedType seed1Type = SeedType.SPACESHIP_ANGLE;
+        String seed1Name = "Angle Spaceship";
         String seed1ImageFile = "seed1.jpg";
 
         Seed seed1 = GenerateSeed(seed1Name, seed1ImageFile, seed1Grid);
+        mSeedMap.put(seed1Type, seed1);
 
-        mSeedMap.put(seed1Name, seed1);
+        // Straight Spaceship
+        int[][] seed2Grid = {
+                {0,1,1,1,1},
+                {1,0,0,0,1},
+                {0,0,0,0,1},
+                {1,0,0,1,0}};
+        SeedType seed2Type = SeedType.SPACESHIP_STRT;
+        String seed2Name = "Straight Spaceship";
+        String seed2ImageFile = "seed2.jpg";
+
+        Seed seed2 = GenerateSeed(seed2Name, seed2ImageFile, seed2Grid);
+        mSeedMap.put(seed2Type,seed2);
+
+        // Still Diamond
+        int[][] seed3Grid = {
+                {0,1,0},
+                {1,0,1},
+                {0,1,0}};
+        SeedType seed3Type = SeedType.STILL_DMND;
+        String seed3Name = "Stationary Diamond";
+        String seed3ImageFile = "seed3.jpg";
+
+        Seed seed3 = GenerateSeed(seed3Name, seed3ImageFile, seed3Grid);
+        mSeedMap.put(seed3Type, seed3);
     }
 
-    public Seed getSeed(String name){
-        if(mSeedMap.containsKey(name)){
-            return mSeedMap.get(name);
+    public Seed getSeed(SeedType sType){
+        if(mSeedMap.containsKey(sType)){
+            return mSeedMap.get(sType);
         }
         else{
             return mDefaultSeed;
