@@ -13,6 +13,7 @@ public class Camera_Handler : MonoBehaviour
     private static readonly float[] ZoomBounds = new float[] { 10f, 85f };
 
     public Camera cam;
+    public GameObject plane;
 
     private Vector3 lastPanPosition;
     private int panFingerId; // Touch mode only

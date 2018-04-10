@@ -8,6 +8,7 @@ public class Transition_To_Level_1 : MonoBehaviour {
     public GameObject Level_Select_UI;
     public GameObject Game_UI;
     public GameObject Staging;
+    public GameObject cam;
 
     // Use this for initialization
     void Start () {
