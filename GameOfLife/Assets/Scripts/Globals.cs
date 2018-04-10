@@ -12,10 +12,19 @@ public enum PlayerType
     PLAYERNEXT = 5
 }
 
+public enum SeedType
+{
+    DIAMOND = 0,
+    GLIDER_R = 1,
+    GLIDER_L = 2,
+    SPACESHIP = 3
+}
+
 public class Globals : MonoBehaviour {
     public static InitialCube[,] cubeGrid;
     public Transform prefab;
     public GameObject plane;
+    public SeedFactory factory;
 
     public static bool completeTurnRequested = false;
     public static bool paintAllowed = false;
@@ -40,6 +49,8 @@ public class Globals : MonoBehaviour {
         cubeGrid[0, 2].SetPlayerType(PlayerType.PLAYER);
         cubeGrid[1, 2].SetPlayerType(PlayerType.PLAYER);
         cubeGrid[2, 2].SetPlayerType(PlayerType.PLAYER);
+
+        factory = new SeedFactory();
     }
 
     // Update is called once per frame
