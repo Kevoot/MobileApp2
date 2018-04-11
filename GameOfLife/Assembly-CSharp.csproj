@@ -58,6 +58,8 @@
      <Compile Include="Assets\Scripts\PaintButton.cs" />
      <Compile Include="Assets\Scripts\RaycastTest.cs" />
      <Compile Include="Assets\Scripts\Rotate_Button.cs" />
+     <Compile Include="Assets\Scripts\Seed.cs" />
+     <Compile Include="Assets\Scripts\SeedFactory.cs" />
      <Compile Include="Assets\Scripts\Transition_To_Level_1.cs" />
      <Compile Include="Assets\Scripts\Transition_To_Level_Select.cs" />
      <Compile Include="Assets\Scripts\UI_Startup.cs" />
